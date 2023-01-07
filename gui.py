@@ -1,5 +1,4 @@
 import re
-
 import customtkinter as cTK
 
 
@@ -84,13 +83,14 @@ class App(cTK.CTk):
         self.ipEntry.bind("<Key>", lambda event: self.turn_back_fg(self.ipEntry))
         self.snEntry.bind("<Key>", lambda event: self.turn_back_fg(self.snEntry))
         self.emailEntry.bind("<Key>", lambda event: self.turn_back_fg(self.emailEntry))
+        self.passWordEntry.bind("<Key>", lambda event: self.turn_back_fg(self.passWordEntry))
 
     def send_to_setup_tools(self):
         name = self.validate_name(self.nameEntry)
         ip = self.validate_ip(self.ipEntry)
         serial = self.validate_sn(self.snEntry)
         email = self.validate_email(self.emailEntry)
-        password = self.passWordEntry.get()
+        password = self.validate_password(self.passWordEntry)
 
     def validate_name(self, name_entry):
         name = name_entry.get()
@@ -123,6 +123,13 @@ class App(cTK.CTk):
             return email
         else:
             self.highlight_error(email_entry)
+
+    def validate_password(self, pw_entry):
+        pw = pw_entry.get()
+        if len(pw) > 0:
+            return pw
+        else:
+            self.highlight_error(pw_entry)
 
     def highlight_error(self, entry):
         entry.focus_force()
