@@ -83,7 +83,7 @@ class App(cTK.CTk):
         self.nameEntry.bind("<Key>", lambda event: self.turn_back_fg(self.nameEntry))
         self.ipEntry.bind("<Key>", lambda event: self.turn_back_fg(self.ipEntry))
         self.snEntry.bind("<Key>", lambda event: self.turn_back_fg(self.snEntry))
-        self.snEntry.bind("<Key>", lambda event: self.turn_back_fg(self.emailEntry))
+        self.emailEntry.bind("<Key>", lambda event: self.turn_back_fg(self.emailEntry))
 
     def send_to_setup_tools(self):
         name = self.validate_name(self.nameEntry)
