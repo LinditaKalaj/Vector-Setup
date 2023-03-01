@@ -1,11 +1,14 @@
 import re
 import customtkinter as ctk
+from setupTools import SetupTools
+from tkinter import messagebox
 
 
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.setupTool = None
         self.emailPattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
         self.ipPattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
         self.namePattern1 = r'[Vv]ector.[A-Za-z0-9]{4}'
@@ -34,8 +37,9 @@ class App(ctk.CTk):
     def configure_style(self):
         self.configure(background='#303030')
         self.title("ezVector Setup")
-        self.geometry("600x800")
+        self.geometry("500x700")
         self.minsize(400, 600)
+        self.maxsize(500, 700)
         self.iconbitmap("./img/myIcon.ico")
         ctk.set_default_color_theme("green")
 
@@ -64,6 +68,8 @@ class App(ctk.CTk):
         serial = self.validate_sn()
         email = self.validate_email()
         password = self.validate_password()
+        if name and ip and serial and email and password:
+            self.setupTool = SetupTools(name, ip, serial, email, password, self)
 
     def validate_name(self):
         name = self.nameEntry.get()
@@ -162,3 +168,6 @@ class App(ctk.CTk):
         self.generateButton = ctk.CTkButton(master=self, text="Generate Config Document",
                                             command=self.send_to_setup_tools)
         self.generateButton.grid(row=6, column=0, columnspan=3, padx=20, pady=(20, 20))
+
+    def show_error_dialog(self, message):
+        messagebox.showerror('Error!', message)
