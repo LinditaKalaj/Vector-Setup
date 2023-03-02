@@ -1,8 +1,11 @@
+import configparser
 import json
 import os
-import sys
 from pathlib import Path
+import socket
+import grpc
 import requests
+from anki_vector import messaging
 from api import Api
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -30,6 +33,8 @@ class SetupTools:
         validate_cert = self.validate_cert_name(cert_file)
         if not validate_cert:
             return
+        guid = self.user_authentication(session_id["session"]["session_token"], cert, self.ip, self.name)
+        self.write_config(cert_file, guid)
 
     def get_session_id(self):
         print("obtaining sessionId ")
@@ -80,3 +85,69 @@ class SetupTools:
                     else:
                         return True
 
+    def user_authentication(self, session_id: bytes, cert: bytes, ip: str, name: str) -> str:
+        # Pin the robot certificate for opening the channel
+        creds = grpc.ssl_channel_credentials(root_certificates=cert)
+        channel = grpc.secure_channel("{}:443".format(ip), creds,
+                                      options=(("grpc.ssl_target_name_override", name,),))
+
+        # Verify the connection to Vector is able to be established (client-side)
+        try:
+            # Explicitly grab _channel._channel to test the underlying grpc channel directly
+            grpc.channel_ready_future(channel).result(timeout=15)
+        except grpc.FutureTimeoutError:
+            self.app_gui.show_error_dialog("\nUnable to connect to Vector\nPlease be sure to connect via the Vector "
+                                           "companion app first, and connect your computer to the same network as "
+                                           "your Vector.")
+            return "error"
+
+        try:
+            interface = messaging.client.ExternalInterfaceStub(channel)
+            request = messaging.protocol.UserAuthenticationRequest(
+                user_session_id=session_id.encode('utf-8'),
+                client_name=socket.gethostname().encode('utf-8'))
+            response = interface.UserAuthentication(request)
+            if response.code != messaging.protocol.UserAuthenticationResponse.AUTHORIZED:  # pylint: disable=no-member
+                self.app_gui.show_error_dialog("\nFailed to authorize request:\nPlease be sure to first set up Vector "
+                                               "using the companion app.")
+                return "error"
+        except grpc.RpcError as e:
+            self.app_gui.show_error_dialog("\nFailed to authorize request:\n An unknown error occurred '{}'".format(e))
+            return "error"
+
+        return response.client_token_guid
+
+    def write_config(self, cert_file=None, guid=None, clear=True):
+        home = Path.home()
+        config_file = str(home / ".anki_vector" / "sdk_config.ini")
+
+        config = configparser.ConfigParser(strict=False)
+
+        try:
+            config.read(config_file)
+        except configparser.ParsingError:
+            if os.path.exists(config_file):
+                os.rename(config_file, config_file + "-error")
+        if clear:
+            config[self.serial] = {}
+        if cert_file:
+            config[self.serial]["cert"] = cert_file
+        if self.ip:
+            config[self.serial]["ip"] = self.ip
+        if self.name:
+            config[self.serial]["name"] = self.name
+        if guid:
+            config[self.serial]["guid"] = guid.decode("utf-8")
+        temp_file = config_file + "-temp"
+        if os.path.exists(config_file):
+            os.rename(config_file, temp_file)
+        try:
+            with os.fdopen(os.open(config_file, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as f:
+                config.write(f)
+        except Exception as e:
+            if os.path.exists(temp_file):
+                os.rename(temp_file, config_file)
+            raise e
+        else:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
