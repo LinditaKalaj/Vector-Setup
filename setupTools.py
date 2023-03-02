@@ -1,10 +1,10 @@
 import json
 import sys
-import time
 from pathlib import Path
-import anki_vector
 import requests
 from api import Api
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 
 
 class SetupTools:
@@ -15,6 +15,7 @@ class SetupTools:
         self.login_credentials = {'username': email, 'password': password}
         self.api = Api()
         self.app_gui = app_gui
+        self.cert = None
 
         self.run()
 
@@ -22,8 +23,8 @@ class SetupTools:
         home_dir = Path.home()
         cert_dir = home_dir / ".anki_vector"
         session_id = self.get_session_id()
-        if session_id and session_id.get("session"):
-            print("finish this later")
+        if not session_id or not session_id.get("session"):
+            return
 
     def get_session_id(self):
         print("obtaining sessionId ")
@@ -37,4 +38,11 @@ class SetupTools:
             print("done")
             return json.loads(r.content)
 
-
+    def get_cert(self):
+        r = requests.get('https://session-certs.token.global.anki-services.com/vic/{}'.format(self.serial))
+        message = json.loads(r.content)
+        if r.status_code != 200:
+            self.app_gui.show_error_dialog(message.get('message'))
+            return None
+        cert = r.content
+        return cert
