@@ -102,7 +102,8 @@ class SetupTools:
         cert_file = str(cert_dir / "{name}-{serial}.cert".format(name=self.name, serial=self.serial))
 
         # Moves progress bar and notifies user
-        self.app_gui.progressInfo.configure(text="Writing certificate file to '{}'...\n".format(cert_file), text_color="white")
+        self.app_gui.progressInfo.configure(text="Writing certificate file to '{}'...\n".format(cert_file),
+                                            text_color="white")
         self.app_gui.progressBar.step()
 
         # Write cert to file
@@ -145,7 +146,7 @@ class SetupTools:
         channel = grpc.secure_channel("{}:443".format(ip), creds,
                                       options=(("grpc.ssl_target_name_override", name,),))
 
-        # Verify the connection to Vector is able to be established (client-side)
+        # Verify the connection to Vector can be established (client-side)
         try:
             # Explicitly grab _channel._channel to test the underlying grpc channel directly
             grpc.channel_ready_future(channel).result(timeout=15)
