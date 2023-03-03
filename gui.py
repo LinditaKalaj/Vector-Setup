@@ -1,13 +1,26 @@
+import asyncio
 import re
+import threading
 import customtkinter as ctk
 from setupTools import SetupTools
 from tkinter import messagebox
 
 
-class App(ctk.CTk):
+class App:
     def __init__(self):
-        super().__init__()
+        self.window = None
 
+    def mainloop(self):
+        self.window = Window(asyncio.get_event_loop())
+        self.window.mainloop()
+
+
+class Window(ctk.CTk):
+    def __init__(self, loop):
+        super().__init__()
+        self.progressBar = None
+        self.loop = loop
+        self.open = True
         self.setupTool = None
         self.emailPattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
         self.ipPattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
@@ -62,14 +75,18 @@ class App(ctk.CTk):
         self.emailEntry.bind("<Key>", lambda event: self.emailEntry.configure(fg_color="gray21"))
         self.passWordEntry.bind("<Key>", lambda event: self.passWordEntry.configure(fg_color="gray21"))
 
-    def send_to_setup_tools(self):
+    def validate_all(self):
         name = self.validate_name()
         ip = self.validate_ip()
         serial = self.validate_sn()
         email = self.validate_email()
         password = self.validate_password()
+
         if name and ip and serial and email and password:
-            self.setupTool = SetupTools(name, ip, serial, email, password, self)
+            self.generateButton.configure(state="disabled", command=None)
+            threading.Thread(target=self.async_thread, args=(name, ip, serial, email, password,)).start()
+            # task = self.loop.create_task(self.send_to_setuptools(name, ip, serial, email, password))
+            # task.add_done_callback(self.callback)
 
     def validate_name(self):
         name = self.nameEntry.get()
@@ -96,7 +113,7 @@ class App(ctk.CTk):
     def validate_sn(self):
         sn = self.snEntry.get()
         if len(sn) == 8:
-            return sn
+            return sn.lower()
         else:
             self.snEntry.focus_force()
             self.snEntry.configure(fg_color="tomato4")
@@ -165,9 +182,30 @@ class App(ctk.CTk):
         self.passWordEntry = ctk.CTkEntry(master=self, width=200, placeholder_text="***********", show="*")
         self.passWordEntry.grid(row=5, column=1, padx=20, pady=20)
 
-        self.generateButton = ctk.CTkButton(master=self, text="Generate Config Document",
-                                            command=self.send_to_setup_tools)
+        self.generateButton = ctk.CTkButton(master=self, state="normal", text="Generate Config Document",
+                                            command=lambda: self.validate_all())
         self.generateButton.grid(row=6, column=0, columnspan=3, padx=20, pady=(20, 20))
 
     def show_error_dialog(self, message):
         messagebox.showerror('Error!', message)
+
+    def update_open(self):
+        self.open = False
+
+    def async_thread(self, name, ip, serial, email, password):
+        self.loop.run_until_complete(self.send_to_setuptools(name, ip, serial, email, password))
+
+    async def send_to_setuptools(self, name, ip, serial, email, password):
+        task = asyncio.create_task(self.something(name, ip, serial, email, password))
+        task.add_done_callback(self.callback)
+        await task
+
+    def callback(self, task):
+        # report a message
+        print('Task is done')
+        self.generateButton = ctk.CTkButton(master=self, state="normal", text="Generate Config Document",
+                                            command=lambda: self.validate_all())
+        self.generateButton.grid(row=6, column=0, columnspan=3, padx=20, pady=(20, 20))
+
+    async def something(self, name, ip, serial, email, password):
+        SetupTools(name, ip, serial, email, password, self)
