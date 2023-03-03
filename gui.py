@@ -18,6 +18,7 @@ class App:
 class Window(ctk.CTk):
     def __init__(self, loop):
         super().__init__()
+        self.progressInfo = None
         self.progressBar = None
         self.loop = loop
         self.open = True
@@ -39,11 +40,11 @@ class Window(ctk.CTk):
         self.nameEntry = None
         self.nameLabel = None
         self.header = None
-        self.sidebar_frame = None
+        self.header_frame = None
 
         self.configure_style()
         self.configure_grid()
-        self.configure_frame()
+        self.configure_header_frame()
         self.configure_items()
         self.set_bindings()
 
@@ -69,11 +70,11 @@ class Window(ctk.CTk):
         self.grid_columnconfigure(2, weight=1)
 
     def set_bindings(self):
-        self.nameEntry.bind("<Key>", lambda event: self.nameEntry.configure(fg_color="gray21"))
-        self.ipEntry.bind("<Key>", lambda event: self.ipEntry.configure(fg_color="gray21"))
-        self.snEntry.bind("<Key>", lambda event: self.snEntry.configure(fg_color="gray21"))
-        self.emailEntry.bind("<Key>", lambda event: self.emailEntry.configure(fg_color="gray21"))
-        self.passWordEntry.bind("<Key>", lambda event: self.passWordEntry.configure(fg_color="gray21"))
+        self.nameEntry.bind("<Key>", lambda event: self.nameEntry.configure(border_color=["#979DA2", "#565B5E"]))
+        self.ipEntry.bind("<Key>", lambda event: self.ipEntry.configure(border_color=["#979DA2", "#565B5E"]))
+        self.snEntry.bind("<Key>", lambda event: self.snEntry.configure(border_color=["#979DA2", "#565B5E"]))
+        self.emailEntry.bind("<Key>", lambda event: self.emailEntry.configure(border_color=["#979DA2", "#565B5E"]))
+        self.passWordEntry.bind("<Key>", lambda event: self.passWordEntry.configure(border_color=["#979DA2", "#565B5E"]))
 
     def validate_all(self):
         name = self.validate_name()
@@ -81,12 +82,9 @@ class Window(ctk.CTk):
         serial = self.validate_sn()
         email = self.validate_email()
         password = self.validate_password()
-
         if name and ip and serial and email and password:
             self.generateButton.configure(state="disabled", command=None)
             threading.Thread(target=self.async_thread, args=(name, ip, serial, email, password,)).start()
-            # task = self.loop.create_task(self.send_to_setuptools(name, ip, serial, email, password))
-            # task.add_done_callback(self.callback)
 
     def validate_name(self):
         name = self.nameEntry.get()
@@ -98,7 +96,7 @@ class Window(ctk.CTk):
             return name
         else:
             self.nameEntry.focus_force()
-            self.nameEntry.configure(fg_color="tomato4")
+            self.nameEntry.configure(border_color="#9c2b2e")
             return None
 
     def validate_ip(self):
@@ -107,7 +105,7 @@ class Window(ctk.CTk):
             return ip
         else:
             self.ipEntry.focus_force()
-            self.ipEntry.configure(fg_color="tomato4")
+            self.ipEntry.configure(border_color="#9c2b2e")
             return None
 
     def validate_sn(self):
@@ -116,7 +114,7 @@ class Window(ctk.CTk):
             return sn.lower()
         else:
             self.snEntry.focus_force()
-            self.snEntry.configure(fg_color="tomato4")
+            self.snEntry.configure(border_color="#9c2b2e")
             return None
 
     def validate_email(self):
@@ -125,7 +123,7 @@ class Window(ctk.CTk):
             return email
         else:
             self.emailEntry.focus_force()
-            self.emailEntry.configure(fg_color="tomato4")
+            self.emailEntry.configure(border_color="#9c2b2e")
             return None
 
     def validate_password(self):
@@ -134,19 +132,19 @@ class Window(ctk.CTk):
             return pw
         else:
             self.passWordEntry.focus_force()
-            self.passWordEntry.configure(fg_color="tomato4")
+            self.passWordEntry.configure(border_color="#9c2b2e")
             return None
 
-    def configure_frame(self):
-        self.sidebar_frame = ctk.CTkFrame(self, corner_radius=0, width=600)
-        self.sidebar_frame.grid(row=0, column=0, columnspan=3, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(0, weight=1)
-        self.sidebar_frame.grid_columnconfigure(0, weight=1)
-        self.sidebar_frame.grid_columnconfigure(1, weight=1)
-        self.sidebar_frame.grid_columnconfigure(2, weight=1)
+    def configure_header_frame(self):
+        self.header_frame = ctk.CTkFrame(self, corner_radius=0, width=600)
+        self.header_frame.grid(row=0, column=0, columnspan=3, sticky="nsew")
+        self.header_frame.grid_rowconfigure(0, weight=1)
+        self.header_frame.grid_columnconfigure(0, weight=1)
+        self.header_frame.grid_columnconfigure(1, weight=1)
+        self.header_frame.grid_columnconfigure(2, weight=1)
 
     def configure_items(self):
-        self.header = ctk.CTkLabel(self.sidebar_frame,
+        self.header = ctk.CTkLabel(self.header_frame,
                                    text="Welcome to ezVector setup!\n"
                                         "Fill in this form to generate "
                                         "a certificate for your robot")
@@ -186,11 +184,15 @@ class Window(ctk.CTk):
                                             command=lambda: self.validate_all())
         self.generateButton.grid(row=6, column=0, columnspan=3, padx=20, pady=(20, 20))
 
+        self.progressInfo = ctk.CTkLabel(master=self, text=" ")
+        self.progressInfo.grid(row=7, column=0, columnspan=3)
+
+        self.progressBar = ctk.CTkProgressBar(master=self, mode="determinate", determinate_speed=7.123, width=600, corner_radius=0)
+        self.progressBar.grid(row=8, column=0, columnspan=3)
+        self.progressBar.set(0)
+
     def show_error_dialog(self, message):
         messagebox.showerror('Error!', message)
-
-    def update_open(self):
-        self.open = False
 
     def async_thread(self, name, ip, serial, email, password):
         self.loop.run_until_complete(self.send_to_setuptools(name, ip, serial, email, password))
@@ -201,7 +203,6 @@ class Window(ctk.CTk):
         await task
 
     def callback(self, task):
-        # report a message
         print('Task is done')
         self.generateButton = ctk.CTkButton(master=self, state="normal", text="Generate Config Document",
                                             command=lambda: self.validate_all())
