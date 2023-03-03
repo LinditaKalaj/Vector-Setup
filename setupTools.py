@@ -51,7 +51,8 @@ class SetupTools:
         self.write_config(cert_file, guid)
 
         # Takes progress bar to the last step
-        self.app_gui.progressInfo.configure(text="Done!", text_color="white")
+        self.app_gui.progressInfo.configure(text="Done! Certificate can be found at: \n '{}'".format(cert_file),
+                                            text_color="white")
         self.app_gui.progressBar.step()
 
     def get_session_id(self):

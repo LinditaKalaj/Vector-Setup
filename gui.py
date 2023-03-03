@@ -6,28 +6,27 @@ from setupTools import SetupTools
 from tkinter import messagebox
 
 
-class App:
-    def __init__(self):
-        self.window = None
-
-    def mainloop(self):
-        self.window = Window(asyncio.get_event_loop())
-        self.window.mainloop()
+def show_error_dialog(message):
+    messagebox.showerror('Error!', message)
 
 
 class Window(ctk.CTk):
-    def __init__(self, loop):
+    def __init__(self):
         super().__init__()
-        self.progressInfo = None
-        self.progressBar = None
-        self.loop = loop
-        self.open = True
+
+        # Get event loop for async call to SetupTools
+        self.loop = asyncio.get_event_loop()
         self.setupTool = None
+
+        # Patterns for validation
         self.emailPattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
         self.ipPattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
         self.namePattern1 = r'[Vv]ector.[A-Za-z0-9]{4}'
         self.namePattern2 = r'Vector-[A-Z0-9]{4}'
 
+        # Gui objects instantiated in init, so I can access it later
+        self.progressInfo = None
+        self.progressBar = None
         self.generateButton = None
         self.passWordEntry = None
         self.passWordLabel = None
@@ -42,6 +41,7 @@ class Window(ctk.CTk):
         self.header = None
         self.header_frame = None
 
+        # Configure styles and gui objects
         self.configure_style()
         self.configure_grid()
         self.configure_header_frame()
@@ -51,13 +51,24 @@ class Window(ctk.CTk):
     def configure_style(self):
         self.configure(background='#303030')
         self.title("ezVector Setup")
-        self.geometry("500x700")
-        self.minsize(400, 600)
-        self.maxsize(500, 700)
         self.iconbitmap("./img/myIcon.ico")
         ctk.set_default_color_theme("green")
 
+        # Set min and max sizes
+        width = 500
+        height = 700
+        self.minsize(400, 600)
+        self.maxsize(500, 700)
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+
+        # Centers window based on users monitor
+        self.geometry('%dx%d+%d+%d' % (width, height, x, y))
+
     def configure_grid(self):
+        # Configures row and col weights
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=1)
@@ -70,24 +81,31 @@ class Window(ctk.CTk):
         self.grid_columnconfigure(2, weight=1)
 
     def set_bindings(self):
+        # Set on key press functions for all entries
         self.nameEntry.bind("<Key>", lambda event: self.nameEntry.configure(border_color=["#979DA2", "#565B5E"]))
         self.ipEntry.bind("<Key>", lambda event: self.ipEntry.configure(border_color=["#979DA2", "#565B5E"]))
         self.snEntry.bind("<Key>", lambda event: self.snEntry.configure(border_color=["#979DA2", "#565B5E"]))
         self.emailEntry.bind("<Key>", lambda event: self.emailEntry.configure(border_color=["#979DA2", "#565B5E"]))
-        self.passWordEntry.bind("<Key>", lambda event: self.passWordEntry.configure(border_color=["#979DA2", "#565B5E"]))
+        self.passWordEntry.bind("<Key>",
+                                lambda event: self.passWordEntry.configure(border_color=["#979DA2", "#565B5E"]))
 
     def validate_all(self):
+        # Sends all entry inputs to their own validator method
         name = self.validate_name()
         ip = self.validate_ip()
         serial = self.validate_sn()
         email = self.validate_email()
         password = self.validate_password()
+
+        # If all inputs are valid start a thread to get the cert asynchronously
         if name and ip and serial and email and password:
             self.generateButton.configure(state="disabled", command=None)
             threading.Thread(target=self.async_thread, args=(name, ip, serial, email, password,)).start()
 
     def validate_name(self):
         name = self.nameEntry.get()
+
+        # Makes sure the input is only XXXX or Vector-XXXX
         if len(name) == 4:
             name = "Vector-{}".format(name.upper())
         if re.match(self.namePattern1, name):
@@ -136,6 +154,7 @@ class Window(ctk.CTk):
             return None
 
     def configure_header_frame(self):
+        # Sets weight of row and cols for info header
         self.header_frame = ctk.CTkFrame(self, corner_radius=0, width=600)
         self.header_frame.grid(row=0, column=0, columnspan=3, sticky="nsew")
         self.header_frame.grid_rowconfigure(0, weight=1)
@@ -144,6 +163,7 @@ class Window(ctk.CTk):
         self.header_frame.grid_columnconfigure(2, weight=1)
 
     def configure_items(self):
+        # Assigns items to ctk objects and set them on the grid
         self.header = ctk.CTkLabel(self.header_frame,
                                    text="Welcome to ezVector setup!\n"
                                         "Fill in this form to generate "
@@ -187,26 +207,27 @@ class Window(ctk.CTk):
         self.progressInfo = ctk.CTkLabel(master=self, text=" ")
         self.progressInfo.grid(row=7, column=0, columnspan=3)
 
-        self.progressBar = ctk.CTkProgressBar(master=self, mode="determinate", determinate_speed=7.123, width=600, corner_radius=0)
+        self.progressBar = ctk.CTkProgressBar(master=self, mode="determinate", determinate_speed=7.123, width=600,
+                                              corner_radius=0)
+
         self.progressBar.grid(row=8, column=0, columnspan=3)
         self.progressBar.set(0)
 
-    def show_error_dialog(self, message):
-        messagebox.showerror('Error!', message)
-
+    # Runs async thread
     def async_thread(self, name, ip, serial, email, password):
         self.loop.run_until_complete(self.send_to_setuptools(name, ip, serial, email, password))
 
+    # Creates an asyncio task and adds a callback function
     async def send_to_setuptools(self, name, ip, serial, email, password):
-        task = asyncio.create_task(self.something(name, ip, serial, email, password))
+        task = asyncio.create_task(self.run_setuptools(name, ip, serial, email, password))
         task.add_done_callback(self.callback)
         await task
 
+    # Allows user to press the generate button after task is complete
     def callback(self, task):
-        print('Task is done')
         self.generateButton = ctk.CTkButton(master=self, state="normal", text="Generate Config Document",
                                             command=lambda: self.validate_all())
         self.generateButton.grid(row=6, column=0, columnspan=3, padx=20, pady=(20, 20))
 
-    async def something(self, name, ip, serial, email, password):
+    async def run_setuptools(self, name, ip, serial, email, password):
         SetupTools(name, ip, serial, email, password, self)
