@@ -1,6 +1,6 @@
 ﻿# Vector-Setup
  
-A GUI to help the user create a credential file for Vector.
+A GUI to help the user create a credential file for Vector (anki / DDL (Digital Dream Labs).
 
 ![Vector cute](/img/vector_gif.gif?raw=true "Vector is cute")
 
