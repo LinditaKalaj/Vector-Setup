@@ -6,10 +6,6 @@ from setupTools import SetupTools
 from tkinter import messagebox
 
 
-def show_error_dialog(message):
-    messagebox.showerror('Error!', message)
-
-
 class Window(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -51,7 +47,6 @@ class Window(ctk.CTk):
     def configure_style(self):
         self.configure(background='#303030')
         self.title("ezVector Setup")
-        self.iconbitmap("./img/myIcon.ico")
         ctk.set_default_color_theme("green")
 
         # Set min and max sizes
@@ -231,3 +226,6 @@ class Window(ctk.CTk):
 
     async def run_setuptools(self, name, ip, serial, email, password):
         SetupTools(name, ip, serial, email, password, self)
+
+    def show_error_dialog(self, message):
+        messagebox.showerror('Error!', message)
