@@ -66,11 +66,11 @@ class SetupTools:
 
         # Alerts user if request was unsuccessful, else return the session information
         if r.status_code != 200:
-            self.app_gui.show_error_dialog(session_id.get('message'))
             self.app_gui.progressInfo.configure(text="Could not verify login info!", text_color="red")
             self.app_gui.emailEntry.configure(border_color="#9c2b2e")
             self.app_gui.passWordEntry.focus_force()
             self.app_gui.passWordEntry.configure(border_color="#9c2b2e")
+            self.app_gui.show_error_dialog(session_id.get('message'))
             return None
         else:
             return json.loads(r.content)
@@ -85,12 +85,11 @@ class SetupTools:
 
         # Alerts user if request was unsuccessful, else return cert
         if r.status_code != 200:
-            self.app_gui.show_error_dialog("Something went wrong! You entered ({}). Please make sure the serial "
-                                           "number is correct, and try again.".format(self.serial))
-            print("error")
             self.app_gui.progressInfo.configure(text="Could not verify Vectors serial number!", text_color="red")
             self.app_gui.snEntry.focus_force()
             self.app_gui.snEntry.configure(border_color="#9c2b2e")
+            self.app_gui.show_error_dialog("Something went wrong! You entered ({}). Please make sure the serial "
+                                           "number is correct, and try again.".format(self.serial))
             return None
 
         return r.content
@@ -126,13 +125,13 @@ class SetupTools:
                 if "commonName" in current:
                     common_name = fields.value
                     if common_name != self.name:
-                        self.app_gui.show_error_dialog("The name of the certificate ({}) does not match the name "
-                                                       "provided ({}). Please verify the name/serial, and try again."
-                                                       .format(common_name, self.name))
                         self.app_gui.progressInfo.configure(text="Could not validate the certificate!",
                                                             text_color="red")
                         self.app_gui.nameEntry.focus_force()
                         self.app_gui.nameEntry.configure(border_color="#9c2b2e")
+                        self.app_gui.show_error_dialog("The name of the certificate ({}) does not match the name "
+                                                       "provided ({}). Please verify the name/serial, and try again."
+                                                       .format(common_name, self.name))
                         return False
                     else:
                         return True
@@ -152,11 +151,11 @@ class SetupTools:
             # Explicitly grab _channel._channel to test the underlying grpc channel directly
             grpc.channel_ready_future(channel).result(timeout=15)
         except grpc.FutureTimeoutError:
+            self.app_gui.progressInfo.configure(text="Could not connect to Vector!",
+                                                text_color="red")
             self.app_gui.show_error_dialog("\nUnable to connect to Vector\nPlease be sure to connect via the Vector "
                                            "companion app first, and connect your computer to the same network as "
                                            "your Vector.")
-            self.app_gui.progressInfo.configure(text="Could not connect to Vector!",
-                                                text_color="red")
             return "error"
 
         try:
@@ -167,15 +166,15 @@ class SetupTools:
                 client_name=socket.gethostname().encode('utf-8'))
             response = interface.UserAuthentication(request)
             if response.code != messaging.protocol.UserAuthenticationResponse.AUTHORIZED:  # pylint: disable=no-member
-                self.app_gui.show_error_dialog("\nFailed to authorize request:\nPlease be sure to first set up Vector "
-                                               "using the companion app.")
                 self.app_gui.progressInfo.configure(text="Could not connect to Vector!",
                                                     text_color="red")
+                self.app_gui.show_error_dialog("\nFailed to authorize request:\nPlease be sure to first set up Vector "
+                                               "using the companion app.")
                 return "error"
         except grpc.RpcError as e:
-            self.app_gui.show_error_dialog("\nFailed to authorize request:\n An unknown error occurred '{}'".format(e))
             self.app_gui.progressInfo.configure(text="Could not connect to Vector!",
                                                 text_color="red")
+            self.app_gui.show_error_dialog("\nFailed to authorize request:\n An unknown error occurred '{}'".format(e))
             return "error"
 
         return response.client_token_guid
