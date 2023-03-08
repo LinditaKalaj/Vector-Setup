@@ -6,10 +6,10 @@ Made using [Custom Tkinter](https://github.com/TomSchimansky/CustomTkinter) (Won
 
 ![Vector cute](/img/vector_gif.gif?raw=true "Vector is cute")
 
-*Tested on Windows only-will test on mac-os soon*
+## Whats the point of this program?
 
 Getting a cert file for Vector can be a real pain, especially for users who dont come from a technical background.
-Vector depends on an sdk (anki-vector) that cannot run on modern python versions and you have to downgrade some site packages like proto-buff.
+Vector depends on an sdk (anki-vector) that cannot run on modern python versions and you have to downgrade some site packages like proto-buf.
 
 To make this easier on people I made a stand-alone exe file so people dont have to downgrade their python version and mess with other libraries.
 
@@ -18,6 +18,12 @@ It's really simple- just enter your information and a cert file will be generate
 https://user-images.githubusercontent.com/91567228/222926517-f109ed2c-6686-43b4-a87a-1cb60c49a594.mp4
 
 In order to use this you must first set up and pair Vector, information can be found here: [How to set up Vector](https://support.digitaldreamlabs.com/article/114-video-vector-and-connection-how-to-set-vector-up)
+
+## Direct links to the executables: 
+
+[Windows executable](https://github.com/LinditaKalaj/Vector-Setup/tree/main/Windows%20Vector-setp)
+
+[MacOS executable](https://github.com/LinditaKalaj/Vector-Setup/tree/main/MacOS%20Vector-Setup)
 
 ## Troubleshooting
 
