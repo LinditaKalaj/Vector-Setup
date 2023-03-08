@@ -2,6 +2,8 @@
  
 A GUI to help the user create a credential file for Vector (anki / DDL (Digital Dream Labs).
 
+Made using [Custom Tkinter](https://github.com/TomSchimansky/CustomTkinter) (Wonderful documentation btw) and [Anki-Vector sdk](https://github.com/anki/vector-python-sdk)
+
 ![Vector cute](/img/vector_gif.gif?raw=true "Vector is cute")
 
 *Tested on Windows only-will test on mac-os soon*
