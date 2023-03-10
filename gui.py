@@ -19,6 +19,7 @@ class Window(ctk.CTk):
         self.ipPattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
         self.namePattern1 = r'[Vv]ector.[A-Za-z0-9]{4}'
         self.namePattern2 = r'Vector-[A-Z0-9]{4}'
+        self.namePattern3 = r'VECTOR.[A-Za-z0-9]{4}'
 
         # Gui objects instantiated in init, so I can access it later
         self.progressInfo = None
@@ -103,8 +104,8 @@ class Window(ctk.CTk):
         # Makes sure the input is only XXXX or Vector-XXXX
         if len(name) == 4:
             name = "Vector-{}".format(name.upper())
-        if re.match(self.namePattern1, name):
-            name = "V{}-{}".format(name[1:-5], name[-4:].upper())
+        if re.match(self.namePattern1, name) or re.match(self.namePattern3, name):
+            name = "V{}-{}".format(name[1:-5].lower(), name[-4:].upper())
         if re.match(self.namePattern2, name):
             return name
         else:
