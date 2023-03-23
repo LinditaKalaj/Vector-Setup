@@ -124,7 +124,7 @@ class Window(ctk.CTk):
 
     def validate_sn(self):
         sn = self.snEntry.get()
-        if len(sn) == 8:
+        if len(sn) == 8 and sn.isalnum():
             return sn.lower()
         else:
             self.snEntry.focus_force()
