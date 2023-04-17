@@ -15,7 +15,7 @@ class Window(ctk.CTk):
         self.setupTool = None
 
         # Patterns for validation
-        self.emailPattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+        self.emailPattern = r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+'
         self.ipPattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
         self.namePattern1 = r'[Vv]ector.[A-Za-z0-9]{4}'
         self.namePattern2 = r'Vector-[A-Z0-9]{4}'
